@@ -2,7 +2,7 @@
 /**
  Plugin Name: Simple Term Ordering
  Plugin URI:
- Description: Order your terms using drag and drop on the built in term list. For further instructions, open the "Help" tab on the Pages screen. This is a fork of the popular <a href="http://wordpress.org/extend/plugins/simple-page-ordering/">Simple Page Ordering</a> plugin
+ Description: Order your terms using drag and drop on the built in term list. For further instructions, open the "Help" tab on the Pages screen. This is a fork of the popular <a href="http://wordpress.org/extend/plugins/simple-page-ordering/">Simple Page Ordering</a> plugin. Also took some code from <a href="http://wordpress.org/extend/plugins/order-up-custom-taxonomy-order/">Custom Taxonomy Order</a> plugin.
  Version: 0.1
  Author: ralcus
  Author URI: http://ralcus.com
@@ -33,6 +33,8 @@ class simple_term_ordering {
       add_action( 'load-edit-tags.php', array( $this, 'wp_edit' ) );
       add_action( 'wp_ajax_simple_term_ordering', array( $this, 'ajax_simple_term_ordering' ) );
     }
+
+    register_activation_hook(__FILE__, array( $this, 'add_term_order' ));
 
   }
 
@@ -167,6 +169,12 @@ class simple_term_ordering {
     }
 
     return $orderby;
+  }
+
+  function add_term_order() {
+    global $wpdb;
+    $init_query = $wpdb->query("SHOW COLUMNS FROM $wpdb->terms LIKE 'term_order'");
+    if ($init_query == 0) { $wpdb->query("ALTER TABLE $wpdb->terms ADD `term_order` INT( 4 ) NULL DEFAULT '0'"); }
   }
 
 }
