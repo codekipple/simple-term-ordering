@@ -60,7 +60,6 @@ jQuery("table.widefat tbody").sortable({
     jQuery.post( ajaxurl, { action: 'simple_term_ordering', id: ID, previd: prevID, nextid: nextID, taxonomy: taxonomy }, function(response){
       if ( response == 'children' ) window.location.reload();
       else {
-        console.log(response);
         /*var changes = jQuery.parseJSON(response);
         jQuery.each(changes, function(key,value) { jQuery('#inline_'+key+' .menu_order').html(value); });*/
         ui.item.find('.check-column input').show().siblings('img').remove();
