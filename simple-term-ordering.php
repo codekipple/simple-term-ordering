@@ -24,7 +24,27 @@
 
 class simple_term_ordering {
 
+  /*
+   * because i like to allow for the plugin to be outside of the plugins directory and symlinked in i have to
+   * avoid the use of the __FILE__ variable as recommended in the WordPress docs.
+   * If the plugin is symlinked into the plugins directory __FILE__ will not work as needed, it will return the actuall path
+   * to the plugin rather then the symlinked path
+   */
+  var $plugin_folder;
+  var $plugin_dir;
+  var $plugin_file;
+  var $plugin_url;
+
   function simple_term_ordering() {
+
+    // setup plugin paths
+    $this->plugin_folder = 'simple-term-ordering';
+    $this->plugin_dir = WP_PLUGIN_DIR . '/' . $this->plugin_folder;
+    $this->plugin_file = $this->plugin_dir . '/simple-term-ordering.php';
+    $this->plugin_url = WP_PLUGIN_URL . '/' . $this->plugin_folder;
+
+    register_activation_hook($this->plugin_file, array($this, 'install'));
+
     // filter terms on the front end
     add_filter('get_terms_orderby', array( $this, 'frontend_terms_order_filter' ), 10, 2);
 
@@ -34,12 +54,11 @@ class simple_term_ordering {
       add_action( 'wp_ajax_simple_term_ordering', array( $this, 'ajax_simple_term_ordering' ) );
     }
 
-    register_activation_hook(__FILE__, array( $this, 'add_term_order' ));
-
   }
 
+
   function admin_init() {
-    load_plugin_textdomain( 'simple-term-ordering', false, dirname( plugin_basename( __FILE__ ) ) . '/localization/' );
+    load_plugin_textdomain( 'simple-term-ordering', false, $this->plugin_dir . '/localization/' );
   }
 
   function wp_edit() {
@@ -56,7 +75,7 @@ class simple_term_ordering {
       return 't.term_order';
     }, 10, 2);
 
-    wp_enqueue_script( 'simple-term-ordering', plugin_dir_url( __FILE__ ) . 'simple-term-ordering.js', array('jquery-ui-sortable'), '0.9.7', true );
+    wp_enqueue_script( 'simple-term-ordering', $this->plugin_url . '/simple-term-ordering.js', array('jquery-ui-sortable'), '0.9.7', true );
     $js_trans = array(
         'RepositionTree' => __("Items can only be repositioned within their current branch in the page tree / hierarchy (next to pages with the same parent).\n\nIf you want to move this item into a different part of the page tree, use the Quick Edit feature to change the parent before continuing.", 'simple-term-ordering')
         );
@@ -171,7 +190,7 @@ class simple_term_ordering {
     return $orderby;
   }
 
-  function add_term_order() {
+  static function install() { // add the extra field in the database
     global $wpdb;
     $init_query = $wpdb->query("SHOW COLUMNS FROM $wpdb->terms LIKE 'term_order'");
     if ($init_query == 0) { $wpdb->query("ALTER TABLE $wpdb->terms ADD `term_order` INT( 4 ) NULL DEFAULT '0'"); }
@@ -179,4 +198,7 @@ class simple_term_ordering {
 
 }
 
-$simple_term_ordering = new simple_term_ordering;
+
+if ( is_admin() ){
+  $simple_term_ordering = new simple_term_ordering;
+}
